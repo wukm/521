@@ -74,7 +74,7 @@ set(gca,'XTick',1:(c+1),'YTick',1:(r+1),...
         'GridLineStyle','-','XGrid','on','YGrid','on');
 clear r c b A
 
-% get confusion matrix for this method
+% confusion matrix
 tmp = ytest + test_est;
 confusion_matrix = [ sum(tmp==2) sum(tmp==1 & ytest==0); ...
                    sum(tmp==1 & ytest==1) sum(tmp==0)];
