@@ -1,50 +1,16 @@
 %%% FINAL PROJECT LUKE WUKMER MATH 521
 clear all; close all; clc;
 cd('/home/luke/521/final'); % make this portable
-images = dir('./TIFFtraining/*.tif');
 
-train_files = { images.name };
+[Xtrain, ytrain, Xtest, ytest, train_files, test_files] = load_cats_and_dogs;
 
-for i = 1:length(train_files)
-    fname = train_files{i};
-    if any(strfind(fname,'Dog'))
-        ytrain(:,i) = 1;
-    elseif any(strfind(fname,'Cat'))
-            ytrain(:,i) = 0;
-    else
-        error('found noncat/dog in training data');
-    end;
-    
-    tmp = double(imread(fname)); % the actual image matrix
-    % there's a bug, one ofthese isn't 2d
-    if ndims(tmp) > 2
-        tmp = tmp(:,:,1);
-    end
-    
-    Xtrain(:,i) = tmp(:);
-end;
+% mean subtract training set and testing set (independently)
+Xtrain = bsxfun(@minus, Xtrain, mean(Xtrain, 2));
+Xtest = bsxfun(@minus, Xtest, mean(Xtest,2));
 
-images = dir('./TIFFtesting/*.tif');
-
-test_files = { images.name };
-
-for i = 1:length(test_files)
-    fname = test_files{i};
-    if any(strfind(fname,'Dog'))
-        ytest(:,i) = 1;
-    elseif any(strfind(fname,'Cat'))
-        ytest(:,i) = 0;
-    else
-        error('found non cat/dog in testing data');
-    end;
-    
-    tmp = double(imread(fname)); % the actual image matrix
-    Xtest(:,i) = tmp(:);
-end;
-
-
-
-clear fname i tmp images
+[Xtrain_lp, Xtest_lp] = lp_cats_and_dogs(Xtrain,Xtest);
+Xtrain = Xtrain - Xtrain_lp;
+Xtest = Xtest - Xtest_lp;
 
 % METHOD ONE--regular SVM with defaults from MATLAB
 SVMModel = fitcsvm(Xtrain',ytrain);
