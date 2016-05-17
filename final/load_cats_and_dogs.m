@@ -15,7 +15,7 @@ else
 
     train_files = { images.name };
 
-    for i = 1:lengpth(train_files)
+    for i = 1:length(train_files)
         fname = train_files{i};
         if any(strfind(fname,'Dog'))
             ytrain(:,i) = 1;

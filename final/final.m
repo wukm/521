@@ -4,15 +4,30 @@ cd('/home/luke/521/final'); % make this portable
 
 [Xtrain, ytrain, Xtest, ytest, train_files, test_files] = load_cats_and_dogs;
 
+
+
 % mean subtract training set and testing set (independently)
 Xtrain = bsxfun(@minus, Xtrain, mean(Xtrain, 2));
 Xtest = bsxfun(@minus, Xtest, mean(Xtest,2));
 
-[Xtrain_lp, Xtest_lp] = lp_cats_and_dogs(Xtrain,Xtest);
-Xtrain = Xtrain - Xtrain_lp;
-Xtest = Xtest - Xtest_lp;
+Xall = [Xtrain Xtest];
+M = max(Xtrain(:)); m = min(Xtrain(:));
+Xtrain = (Xtrain - m)/(M-m);
+M = max(Xall(:)); m = min(Xall(:));
+Xtest = (Xtest - m)/(M-m);
+
+% [Xtrain_lp, Xtest_lp] = lp_cats_and_dogs(Xtrain,Xtest);
+% Xtrain_0 = Xtrain; Xtest_0 = Xtest;
+% Xtrain = Xtrain_lp; Xtest = Xtest_lp;
+% signal_size = [64 64]
+
+[Xtrain_wav, Xtest_wav, signal_size ] = wav_cats_and_dogs(Xtrain,Xtest);
+Xtrain_0 = Xtrain; Xtest_0 = Xtest;
+Xtrain = Xtrain_wav; Xtest = Xtest_wav;
+
 
 % METHOD ONE--regular SVM with defaults from MATLAB
+%SVMModel = fitcsvm(Xtrain',ytrain,'KernelFunction','rbf','BoxConstrain',Inf);
 SVMModel = fitcsvm(Xtrain',ytrain);
 [test_est, score_test] = predict(SVMModel, Xtest');
 test_est = test_est'; % transpose estimated labels (so same shape)
@@ -27,10 +42,15 @@ accuracy_train = [sum(train_est==ytrain) numel(ytrain)];
 A = double((test_est == ytest));
 A(end+1:end+2) = .5;
 
-figure(1); montage(test_files', 'Size', [5 8]);
+figure(1);
+Xtest_0_mat = reshape(Xtest_0, 64, 64, 1, 38);
+montage(Xtest_0_mat, 'Size', [5 8]);
+title('original (nonfiltered) test set');
+
 b = reshape(A, [8,5])';
 
 figure(2);
+title('mislabeled');
 [r,c] = size(b);
 imagesc((1:c)+0.5,(1:r)+0.5,b);
 colormap(gray);
@@ -38,7 +58,13 @@ axis equal;
 set(gca,'XTick',1:(c+1),'YTick',1:(r+1),...
         'XLim',[1 c+1],'YLim',[1 r+1],...
         'GridLineStyle','-','XGrid','on','YGrid','on');
+
 clear r c b A
+
+A = reshape(Xtest,signal_size(1), signal_size(2),1,38);
+figure(3);
+montage(A, 'Size', [5 8]);
+title('filtered test set');
 
 % get confusion matrix for this method
 tmp = ytest + test_est;

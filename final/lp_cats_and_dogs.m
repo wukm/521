@@ -7,15 +7,19 @@ if exist('lp_cats_and_dogs.mat')
 else
     lp_filter = [ 1 1 1 ; 1 -8 1 ; 1 1 1 ];
     X_all = [Xtrain Xtest];
+    X_new = zeros(size(X_all));
     for i = 1:size(X_all,2)
         img = reshape(X_all(:,i), [64 64]);
         edge = conv2(lp_filter, img);
         edge = edge(2:end-1, 2:end-1); % remove padding
-        X_all(:,i) = edge(:);
+        X_new(:,i) = edge(:);
     end;
     
+    % now add edges to sharpen
+    X_all = X_all - X_new;
+    
     Xtrain_edges = X_all(:,1:size(Xtrain,2));
-    Xtest_edges =X_all(:,size(Xtrain,2)+1:end);
+    Xtest_edges = X_all(:,size(Xtrain,2)+1:end);
     
     save('lp_cats_and_dogs.mat', 'Xtrain_edges', 'Xtest_edges');
     
